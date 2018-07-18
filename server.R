@@ -9,17 +9,28 @@ data <- read.csv("./Data/sample.csv")
 
 server <- function(input, output){
 
-    # define reactive function    
-    #data2 =reactive({
-    #       data2 <- subset(data, data$year == input$yr)
-    #       return(data2)
-            
-    #}) 
+
+    # filter data
+    selectedData <- reactive({    
+        data <- subset(data, year == input$yr)
+        })
+    
+
     
     #Test table
     output$table1 <- DT::renderDataTable({ data })
+    
+    output$table2 <- DT::renderDataTable({ selectedData() })
 
-    output$table2 <- renderDT({ data })
+    #한번에 5줄씩만 나오게 하기
+    #output$table2 <- DT::renderDataTable({
+    #    DT::datatable(data, options = list(lengthMenu = c(5, 30, 50), pageLength = 5))
+    #})
+    
+    # 지정한 컬럼값만 나오게 하기
+    output$table3 <- renderDT({ 
+        DT::datatable(data[, input$show_vars, drop = FALSE])
+        })
     
     #Test Plot
     #output$plot <- renderPlot({

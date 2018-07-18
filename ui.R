@@ -1,4 +1,6 @@
 library(shiny)
+data <- read.csv("./Data/sample.csv")
+
 
 ui <- fluidPage(
         
@@ -8,7 +10,7 @@ ui <- fluidPage(
         sidebarPanel(
             # Input birth year with number
             numericInput("yr", 
-                         h5("Input birth year:"), 
+                         h4("Input birth year:"), 
                          value = 1981,
                          min = 1910,
                          max = 2017
@@ -18,13 +20,18 @@ ui <- fluidPage(
             selectInput("gd", h4("Choose gender :")
                 , choices = list("Female" = 1, "Male" = 2)
                 , selected = 1
-            )
+            ),
+            
+            # Select Column
+            checkboxGroupInput("show_vars", h4("Columns in dataset to show: "),
+                               names(data), selected = names(data))
             
         ),
         
         mainPanel(
-              DT::dataTableOutput("table1")
-              , DTOutput("table2")
+                DT::dataTableOutput("table1")
+              , DT::dataTableOutput("table2")
+              #, DTOutput("table2")
               #, plotOutput("plot")
         )
     )
