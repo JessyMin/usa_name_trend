@@ -30,9 +30,7 @@ ui <- fluidPage(
         
         mainPanel(
                 DT::dataTableOutput("table1")
-              , DT::dataTableOutput("table2")
-              #, DTOutput("table2")
-              #, plotOutput("plot")
+
         )
     )
 )
