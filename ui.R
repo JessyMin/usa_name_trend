@@ -8,31 +8,55 @@ ui <- fluidPage(
     
     sidebarLayout(
         sidebarPanel(
-            # Input birth year with number
-            numericInput("yr", 
-                         h4("Input birth year:"), 
-                         value = 1981,
-                         min = 1910,
-                         max = 2017
-            ), 
+            
+            # Select birth year
+            selectInput("year", h4("Select birth year :"),
+                        choices = unique(data$year),
+                        selected = 1981
+            ),
+            
             
             # Input gender
-            selectInput("gd", h4("Choose gender :")
-                , choices = list("Female" = 1, "Male" = 2)
-                , selected = 1
+            radioButtons(
+                'gender', h4("Select gender :"),
+                choices = list('Female' = 'F', 'Male' = 'M'),
+                selected = "F"
             ),
             
             # Select Column
-            checkboxGroupInput("show_vars", h4("Columns in dataset to show: "),
-                               names(data), selected = names(data))
+            checkboxGroupInput(
+                'show_vars', h4("Columns in dataset to show: "),
+                choices = names(data)[-(1:2)], 
+                selected = names(data)
+            ),
             
+            # 이름 고르기
+            #selectizeInput(
+            #    'name', h4("Name to show detail: "),
+            #    choices = unique(data$name),
+            #    options = list(placeholder = 'type a name')
+            #)
+
+            #이름 고르기
+            selectInput(
+                'name', h4("Name to show detail: "),
+                choices = unique(data$name),
+                #placeholder = 'type a name',
+                selectize = TRUE,
+                multiple = FALSE
+            )
+             #           selected = "20th Century Fox",
+             #           selectize = TRUE,
+             #           multiple = TRUE)
+        
+                        
         ),
         
         mainPanel(
+                p(h4(textOutput("tableInfoText"))),
                 DT::dataTableOutput("table1")
-
         )
     )
-)
+
 
 

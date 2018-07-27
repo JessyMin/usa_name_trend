@@ -3,7 +3,8 @@ library(DT)
 library(dplyr)
 
 # loading local data file
-data <- read.csv("./Data/sample.csv")
+data <- read.csv("./Data/sample.csv", row.names=NULL)
+
 
 
 
@@ -11,31 +12,49 @@ server <- function(input, output){
 
 
     # filter data
-    selectedData <- reactive({    
-        data <- subset(data, year == input$yr)
+    selectedData2 <- reactive({ 
+        req(input$year)
+        req(input$gender)
+        data <- subset(data, 
+            year == input$year & gender == input$gender)
         })
     
+    selectedData <- reactive({ 
+        req(input$year)
+        req(input$gender)
+        data <- data %>% 
+            filter(year == input$year & gender == input$gender)# %>%
+            #select(rank, count, name)
+    })
+    
+    # Reactive name list
+    all_names <- sort(unique(selectedData()$name))
+    
+    # Reactive Gender Text
+    genderText <- reactive( if (input$gender == "F") "Female" else "Male")
+    
+    # Year Text
+    output$tableInfoText <- renderText({
+        paste0(genderText(), " baby names in ", input$year)
+    })
+    
     # 지정한 컬럼값만 나오게 하기
-    output$table1 <- renderDT({ 
-        DT::datatable(selectedData()[, input$show_vars, drop = FALSE])
-        })
+    output$table1 <- renderDT({
+        DT::datatable(
+            selectedData()[, input$show_vars, drop = FALSE], 
+            width = 300,
+            #colnames = c("Year" = year),
+            rownames=FALSE
+        )
+    })
+    
+    # 이름 고르게 하기
+    #updateSelectizeInput(session, 'name', choices = data, server = TRUE)
+    
     
     #Test Plot
     #output$plot <- renderPlot({
     #    ggplot(data2(), aes(year, count, col=name)) + geom_line()
     #})
-    
-
-    #output$table <- DT::renderDataTable({
-     #   df_year <- data %>%
-      #          filter(gender == gd) %>%
-       #         filter(year == yr) %>%
-        #        group_by(name) %>%
-         #       summarise(count = sum(number)) #%>%
-                #mutate(ranks = rank(-count)) %>%
-                #arrange(ranks)
-       # DT::datatable(data = df_year, 
-        #                  options = list(pageLength = 10), 
-         #                 rownames = FALSE)
     
 }
