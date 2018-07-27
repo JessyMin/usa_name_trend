@@ -1,0 +1,118 @@
+---
+title: "Read Data"
+output: html_notebook
+---
+
+
+데이터의 특성은 아래와 같다.
+
+
+데이터셋은 아래 URL에서 다운받을 수 있다. 
+```{r download data}
+setwd("/Users/jessymin/Documents/usa_name_trend/Data")
+
+url = "https://www.ssa.gov/OACT/babynames/limits.html"
+filepath = '/Users/jessymin/Documents/usa_name/namesbystate'
+
+```
+
+
+
+52개의 주별로 저장된 데이터 파일을 읽어들여 하나의 데이터프레임으로 합치는 작업이다. 
+
+```{r read & merge data}
+
+file_list = dir()
+l = length(file_list)
+
+df<-data.frame()
+for (i in (1:length(file_list))) {
+    data <- read.csv(file_list[i], 
+        colClasses = c("factor","factor", "integer", "character", "integer"),
+        header=F)
+    df <- rbind(df, data)
+    rm(data)
+}
+
+rm(file_list, i, l)
+colnames(df) <- c('state', 'gender', 'year', 'name', 'number')
+```
+
+위 작업은 수행시간이 오래 걸리는 편이다. 
+
+
+이 문제를 해결하기 위해 `read.csv` 대신 `read_csv`를 사용해보았다.
+col_types을 지정하지 않으면 gender 컬럼의 'F'를 Fasle로, 'M'을 NA로 읽어들인다. 처음 1,000개 행을 스캔해서 데이터 타입을 판단한 뒤 읽어들이기 때문이다.
+
+따라서 아래와 같이 col_types를 지정해줘야 한다. 
+
+
+
+```{r read_csv}
+#readr 사용해보기.
+df <- data.frame()
+for (i in (1:length(file_list))) {
+    data <- read_csv(file_list[i], 
+        col_types = cols(
+            X1 = col_character(), 
+            X2 = col_character(), 
+            X3 = col_integer(), 
+            X4 = col_character(),
+            X5 = col_integer()
+        ), 
+        col_names = F)
+    df <- rbind(df, data)
+    rm(data)
+}
+
+rm(file_list, i, l)
+colnames(df) <- c('state', 'gender', 'year', 'name', 'number')
+```
+
+
+
+#### readr 패키지의 불안정성
+
+1. 
+참고로 위의 코드를 사용했을 때는, 중간에 한 번 아래와 같은 에러가 발생하고 21번째 파일까지밖에 못읽었다.
+```{r}
+Error in match.names(clabs, names(xi)) : 
+  names do not match previous names 
+```
+그러나 생성된 df를 삭제하고 다시 실행하니 50개 파일이 제대로 읽혀졌다. 안되시는 분들은 이렇게 해보시길 바란다. 
+
+2.
+col_types에 약어를 쓸 수 있다고 해서 아래 코드로 실행해보니, 에러가 발생하면서 두 배로 읽혔다. 
+
+```{r}
+df <- data.frame()
+for (i in (1:length(file_list))) {
+    data <- read_csv(file_list[i], 
+                     col_types = cols(
+                         X1 = "c", 
+                         X2 = "c", 
+                         X3 = "i", 
+                         X4 = "c",
+                         X5 = "i"
+                     ), 
+                     col_names = F)
+    df <- rbind(df, data)
+    rm(data)
+}
+
+
+```
+
+#에러
+경고: 2 parsing failures.
+row col   expected actual                         file
+  1  X3 an integer year   'usa_names_1910_current.csv'
+  1  X5 an integer number 'usa_names_1910_current.csv'
+  
+
+### 3. 파일 저장하기
+
+```{r save file}
+write.csv(df, 'usa_names_1910_current.csv', row.names=F)
+```
+
