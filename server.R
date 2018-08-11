@@ -88,7 +88,7 @@ server <- function(input, output){
     #선택한 이름 상세 테이블
     selectedName <- reactive({ 
         req(input$name)
-        data <- subset(data, name == input$name)
+        data <- subset(data, name == input$name & gender == input$gender)
     })
     
     #선택한 이름만 Plot 그리기
