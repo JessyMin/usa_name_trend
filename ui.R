@@ -31,44 +31,17 @@ ui <- fluidPage(
                 choices = c('rank','name','count','rank_o','rank_up','status'),
                 selected = c('rank','name','status')
             )
-            
-            #테스트용 텍스트인풋
-            , textInput(
-                "name", h3("Type name :"), 
-                value = ""   
-            )
-            
-            
-            # 이름 고르기
-            #, selectizeInput(
-            #    'name', h4("Name to show detail: "),
-            #    choices = unique(data$name),
-            #    options = list(placeholder = 'type a name')
-            #)
-
-            #이름 고르기
-            #, selectInput(
-            #    'name', h4("Name to show detail: "),
-            #    choices = unique(data$name),
-                #placeholder = 'type a name',
-            #    selectize = TRUE,
-            #    multiple = FALSE
-            #)
-             #           selected = "20th Century Fox",
-             #           selectize = TRUE,
-             #           multiple = TRUE)
-        
                         
         ),
         
         mainPanel(
             
-                p(h4(textOutput("tableInfoText")))
-
-                , div(DT::dataTableOutput("table3")
-                      , style = "width: 80%")
+                p(h4(textOutput("tableText"))),
+                div(DT::dataTableOutput("table1"),
+                      style = "width: 80%"),
                 
-                , plotOutput("plot1")
+                p(h4(textOutput("nameText"))),
+                plotOutput("plot")
         )
     )
 )

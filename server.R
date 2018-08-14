@@ -4,7 +4,7 @@ library(dplyr)
 
 # loading local data file
 # setwd("/Users/jessymin/documents/usa_name_trend")
-data <- read.csv("./data/sample2.csv")
+data <- read.csv("./data/sample2.csv", stringsAsFactors = F)
 
 
 server <- function(input, output){
@@ -59,53 +59,48 @@ server <- function(input, output){
         if (input$gender == "F") "Female" else "Male"
     })
     
-    #성별/이름 Text
-    output$tableInfoText <- renderText({
+    #테이블 설명 텍스트(성별/연도)
+    output$tableText <- renderText({
         paste0(genderText(), " baby names in ", input$year)
     })
     
-    #전체 테이블
-    output$table1 <- renderDT({
-        DT::datatable(
-            selectedData()[, input$show_vars, drop=FALSE], 
-            width=500,
-            rownames=FALSE
-        )
-    })
-    
     #조인 테이블
-    output$table3 <- renderDT({
+    output$table1 <- renderDT({
         DT::datatable(
             joinedTable()[, input$show_vars, drop=FALSE],
             width=500,
-            rownames=FALSE
+            rownames=FALSE,
+            selection='single'
         )
     })
     
     
-    
+    #Plot 설명 텍스트(선택한 이름)
+    output$nameText <- renderText({
+        req(input$table1_rows_selected)
+        i <- input$table1_rows_selected
+        name2 <- joinedTable()$name[[i]]
+        paste0("Trend of the name you choosed : ", name2)
+    })
     
     #선택한 이름 상세 테이블
     selectedName <- reactive({ 
-        req(input$name)
-        data <- subset(data, name == input$name & gender == input$gender)
+        req(input$table1_rows_selected)
+        i <- input$table1_rows_selected
+        name2 <- joinedTable()$name[[i]]
+        data <- subset(data, name %in% name2 & gender == input$gender)
     })
     
-    #선택한 이름만 Plot 그리기
-    output$plot1 <- renderPlot({
+    #선택한 이름으로 Plot 그리기
+    output$plot <- renderPlot({
         d <- selectedName()
+        y <- as.numeric(input$year)
         ggplot(data=d, aes(year, count)) + geom_line(col='steelblue') + 
-            theme_minimal()
+            theme_classic() +
+            geom_vline(aes(xintercept = y), col='grey', alpha=0.6)
     })
     
-
-    #observeEvent(input$name, {
-    #    output$table2 <- renderDT({
-    #        DT::datatable(selectedData2(), rownames=FALSE)
-    #    })    
-    #})
+ 
     
-    # 이름 고르게 하기
-    #updateSelectizeInput(session, 'name', choices = data, server = TRUE)
-    
+  
 }
