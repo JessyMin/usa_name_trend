@@ -1,106 +1,78 @@
-library(ggplot2)
 library(DT)
 library(dplyr)
+library(data.table)
+library(readr)
+library(ggplot2)
+
 
 # loading local data file
-# setwd("/Users/jessymin/documents/usa_name_trend")
-data <- read.csv("./data/sample2.csv", stringsAsFactors = F)
+# setwd("/Users/jessymin/Documents/Github/usa_name_trend")
+data <- fread("usa_names_1963_current.csv", 
+              colClasses = c("character","character","integer","integer","numeric","integer","integer","integer","character"))
 
 
 server <- function(input, output){
 
-    #Filter data with year & gender
-    selectedData <- reactive({ 
-        req(input$year)
-        req(input$gender)
-        data <- data %>% 
-            filter(year == input$year) %>%
-            filter(gender == input$gender)    })
-
-    ###########################################################    
-    #Join 테이블
-    joinedTable <- reactive({
-        req(input$year)
-        req(input$gender)
-        y <- as.numeric(input$year)
-        
-        data1 <- sample %>% 
-            filter(year == input$year) %>%
-            filter(gender == input$gender)    
-        
-        data2 <- sample %>%
-            filter(year == y - 3) %>%
-            filter(gender == input$gender)    
-        
-        joinData <- data1 %>% 
-            left_join(data2, by = c('name'='name'))
-        rm(data1, data2)
-        
-        colnames(joinData) <- c('year','gender','rank','name','count','year_o','gender_o','rank_o','count_o')
-        
-        joinData <- joinData %>% 
-            select(c(1:5), 8) 
-        
-        joinData <- joinData %>%
-            mutate(rank_up = rank_o - rank)
-        
-        joinData <- joinData %>%
-            mutate(status = case_when(
-                joinData$rank_up > 0 ~ "▲",
-                joinData$rank_up == 0 ~ "-",
-                joinData$rank_up < 0 ~ "▽")
-            )
-        })
-    
-    
-
-    #Reactive Gender Text
-    genderText <- reactive({ 
-        if (input$gender == "F") "Female" else "Male"
+    # 메인테이블 설명 텍스트("Femail baby name in 1960")
+    genderText <- reactive({
+      if (input$gender == "F") "Female" else "Male"
     })
     
-    #테이블 설명 텍스트(성별/연도)
     output$tableText <- renderText({
-        paste0(genderText(), " baby names in ", input$year)
+      paste0(genderText(), " baby names in ", input$year)
     })
     
-    #조인 테이블
+    
+    # 메인테이블
+    # input year & gender로 필터링
+    filteredData <- reactive({
+        req(input$year)
+        req(input$gender)
+        data <- data %>%
+            filter(year == input$year & gender == input$gender)    
+    })
+
+    # 테이블 생성
     output$table1 <- renderDT({
         DT::datatable(
-            joinedTable()[, input$show_vars, drop=FALSE],
+            filteredData()[, input$show_vars, drop=FALSE],
             width=500,
             rownames=FALSE,
             selection='single'
         )
     })
+
     
+    ####################################################################
     
-    #Plot 설명 텍스트(선택한 이름)
+    # 선택한 이름으로 연도별 추이 Plot 그리기
+    
+    # Plot 설명 텍스트
     output$nameText <- renderText({
         req(input$table1_rows_selected)
         i <- input$table1_rows_selected
-        name2 <- joinedTable()$name[[i]]
-        paste0("Trend of the name you choosed : ", name2)
+        name_selected <- filteredData()$name[[i]]
+        paste0("Trend of the name you choosed : ", name_selected)
     })
-    
-    #선택한 이름 상세 테이블
-    selectedName <- reactive({ 
+
+    # 연도별 데이터 추출
+    selectedName <- reactive({
         req(input$table1_rows_selected)
         i <- input$table1_rows_selected
-        name2 <- joinedTable()$name[[i]]
-        data <- subset(data, name %in% name2 & gender == input$gender)
+        name_selected <- filteredData()$name[[i]]
+        data <- data %>% filter(name %in% name_selected & gender == input$gender)
     })
+
     
-    #선택한 이름으로 Plot 그리기
+    # 정규화된 값으로 Plot 그리기
     output$plot <- renderPlot({
         d <- selectedName()
         y <- as.numeric(input$year)
-        ggplot(data=d, aes(year, count)) + geom_line(col='steelblue') + 
+        ggplot(data=d, aes(year, norm)) + 
+            geom_line(col='steelblue') +
             theme_classic() +
-            geom_vline(aes(xintercept = y), col='grey', alpha=0.6)
-    })
-    
- 
-    
-  
+            geom_vline(aes(xintercept = y), col='grey', alpha=0.6)        
+      })
+
 }
+
