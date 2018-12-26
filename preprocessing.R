@@ -7,12 +7,12 @@ url = "https://www.ssa.gov/OACT/babynames/limits.html"
 setwd("/Users/jessymin/Documents/Github/usa_name_trend/names")
 
 
-filepath = "/Users/jessymin/Documents/Github/usa_name_trend/names"
+filepath = "/Users/jessymin/Documents/Github/names"
 file_list = dir()
 l = length(file_list)
 
-# Read data
 
+# Read data
 df<-data.frame()
 
 for (i in (1:l)) {
@@ -23,15 +23,19 @@ for (i in (1:l)) {
   rm(data)
 }
 
-rm(file_list, i, l)
+rm(filepath, file_list, i, l)
+
 
 
 # 컬럼명 추가
 colnames(df) <- c("name", "gender", "count", "year")
 
+
+
 # 컬럼타입 변경
 df$gender <- as.factor(df$gender)
 df$year <- as.numeric(df$year)
+
 
 
 # 출현빈도 정규화하기
@@ -45,6 +49,7 @@ df <- df %>%
       select(-group_sum)
 
 
+
 # 각 연도별로 랭킹 추가
 df <- df %>% arrange(gender, year, desc(count))
 
@@ -53,8 +58,8 @@ df <- df %>%
           mutate(rank = dense_rank(-count))
 
 
-# 3년전과 랭킹 비교위해 조인하기
 
+# 3년전과 랭킹 비교위해 조인하기
 df2 <- df
 df$year_before_3 <- df$year - 3
 
@@ -62,10 +67,13 @@ df <- left_join(df, df2, by = c('gender'='gender', 'year_before_3'='year', 'name
 df <- filter(df, year >= 1963)
 df <- df %>% select(-year_before_3, -count.y, -norm.y)
 
-colnames(df) <- c('name','gender','count','year','norm', 'rank', 'rank_previous')
+colnames(df) <- c('name','gender','count','year','norm','rank','rank_previous')
+
+
 
 # 랭크에 신규 진입한 이름은 임의값(10,000)을 이전 랭킹으로 부여
 df[is.na(df$rank_previous),]$rank_previous <- 10000
+
 
 
 # 랭킹 변화 표시
@@ -79,39 +87,14 @@ df <- df %>%
               )
             )
 
+
+
+# 컬럼 순서 재정렬
+df <- df %>% select(6, 9, 8, 1:5, 7)
+
   
-#파일 저장
+
+# 파일 저장
 write.csv(df, 'usa_names_1963_current.csv', row.names=F)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# 전체 n수는? 출산율 증감 추이는?
-
-df_summary <- df %>% 
-                group_by(year, gender) %>%
-                summarise(counts = sum(count))
-
-ggplot(df_summary, aes(year, counts, fill=gender)) +
-                geom_bar(stat='identity', position=position_dodge())
-
-
-
 
 
