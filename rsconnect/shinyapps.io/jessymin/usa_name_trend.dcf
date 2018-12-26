@@ -1,0 +1,10 @@
+name: usa_name_trend
+title:
+username:
+account: jessymin
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 399861
+bundleId: 1784052
+url: https://jessymin.shinyapps.io/usa_name_trend/
+when: 1545843608.7874
